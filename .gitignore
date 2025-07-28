@@ -1,0 +1,29 @@
+# Ignorar node_modules en cualquier subcarpeta
+node_modules/
+**/node_modules/
+
+# Ignorar entornos
+.env
+**/.env
+
+# Ignorar archivos de log
+*.log
+
+# Ignorar carpetas de salida / build
+dist/
+build/
+**/dist/
+**/build/
+
+# Ignorar PDFs y otros archivos generados
+*.pdf
+
+# Ignorar imágenes procesadas
+**/procesados/
+*.jpg
+*.jpeg
+*.png
+
+# Ignorar archivos del sistema
+.DS_Store
+Thumbs.db
