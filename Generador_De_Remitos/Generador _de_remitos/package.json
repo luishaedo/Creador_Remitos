@@ -1,0 +1,12 @@
+{
+  "name": "generador-_de_remitos",
+  "version": "1.0.0",
+  "description": "Este proyecto permite transformar remitos `.txt` en el formato correcto para ser cargados en el sistema **Dragonfish**, basándose en un diccionario de artículos. No se usa OCR, sino que se trabaja con remitos ya digitalizados como texto plano.",
+  "main": "convertir.js",
+  "scripts": {
+  "generar": "node generador.js",
+  "convertir": "node convertir.js"
+},
+  "author": "",
+  "license": "ISC"
+}
