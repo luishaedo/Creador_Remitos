@@ -1,0 +1,12 @@
+# Ignorar node_modules de cualquier subcarpeta
+**/node_modules/
+
+# Ignorar archivos del sistema
+.DS_Store
+
+# Archivos de entorno
+**/.env
+
+# Ignorar otras carpetas temporales si las hay
+**/dist/
+**/build/
