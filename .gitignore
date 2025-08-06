@@ -4,3 +4,5 @@
 *.pdf
 **/procesados/
 *.txt
+node_modules/
+
