@@ -87,6 +87,23 @@ Esto generará:
 
 ---
 
+### 2. Reprocesar remitos
+
+1. Colocar los articulos desconocidos de cada remito de la carpeta desconocidos, dentro del json de articulos_tav.json
+2. Ejecutar:
+
+```bash
+node reprocesar_desconocidos.js
+```
+
+Esto generará:
+- Archivo completo en `dragonfish/`, con los que habian sido desconocidos sumados a su remito correspondientes
+- Errores y líneas inválidas en `desconocidos/`
+- Registro en `log_errores.txt` (si ocurre algo)
+- Mueve el remito procesado a `remitos_procesados/`
+
+---
+
 ## 🚨 Errores posibles
 
 - `FORMATO_INVALIDO`: la línea no cumple el patrón esperado
