@@ -5,4 +5,7 @@
 **/procesados/
 *.txt
 node_modules/
+Generador_De_Remitos/Generador _de_remitos/dragonfish/
+*.lnk
+
 

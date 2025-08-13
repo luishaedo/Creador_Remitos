@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 
@@ -10,6 +9,26 @@ try {
   fs.writeFileSync('log_errores.txt', `❌ Error al leer articulos_tav.json:\n${err.message}`);
   console.error('❌ No se pudo leer articulos_tav.json');
   process.exit(1);
+}
+
+// Leer configuración de especiales (si no existe, queda vacío)
+let especiales = {};
+try {
+  if (fs.existsSync('especiales.json')) {
+    especiales = JSON.parse(fs.readFileSync('especiales.json', 'utf-8'));
+  }
+} catch (err) {
+  fs.appendFileSync('log_errores.txt', `⚠️ No se pudo leer especiales.json:\n${err.message}\n`);
+}
+
+// Leer configuración de packs (si no existe, queda vacío)
+let packs = {};
+try {
+  if (fs.existsSync('packs.json')) {
+    packs = JSON.parse(fs.readFileSync('packs.json', 'utf-8'));
+  }
+} catch (err) {
+  fs.appendFileSync('log_errores.txt', `⚠️ No se pudo leer packs.json:\n${err.message}\n`);
 }
 
 const inputDir = path.join(__dirname, 'input');
@@ -44,16 +63,45 @@ archivos.forEach(archivo => {
         return;
       }
 
-      const [_, codigoBase, talleRaw, cantidad] = match;
+      const [_, codigoBase, talleRaw, cantidadStr] = match;
+      const cantidad = parseInt(cantidadStr, 10);
 
+      // ---------- LÓGICA DE PACKS ----------
+      if (packs[codigoBase]) {
+        const reglaPack = packs[codigoBase];
+        const factor = Number(reglaPack.factor) || 1;
+        const unidades = cantidad * factor;
+
+        // SKU: usar override si viene; si no, buscar en articulos_tav
+        let skuDesdeConfig = (reglaPack.sku || '').trim();
+        let skuElegida = skuDesdeConfig
+          ? skuDesdeConfig
+          : articulos[codigoBase];
+
+        if (!skuElegida) {
+          desconocidos.push(`PACK_SIN_SKU (${codigoBase}) → No hay 'sku' en packs.json ni en articulos_tav.json`);
+          return;
+        }
+
+        // Talle: usar el del pack (o "U"/"0" si no viene)
+        let tallePack = (reglaPack.talle || 'U').toString().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (tallePack === '000') tallePack = '0';
+
+        const lineaFinalPack = `${unidades}+${skuElegida.toLowerCase()}$${tallePack}`;
+        salida.push(lineaFinalPack);
+        return; // Importante: no seguir a lógica de especiales si es pack
+      }
+
+      // ---------- LÓGICA NORMAL (NO PACK) ----------
       if (!articulos[codigoBase]) {
         desconocidos.push(`NO_ENCONTRADO (${codigoBase}) → ${linea}`);
         return;
       }
 
-      const articuloFinal = articulos[codigoBase];
+      let articuloFinalBase = articulos[codigoBase]; // p.ej. "thj01428205"
       let talle = talleRaw.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
+      // Normalización de talles
       if (talle === "XXXL" || talle === "XXX") talle = "3XL";
       else if (talle === "XXL") talle = "2XL";
       else if (talle === "XL") talle = "XL";
@@ -66,11 +114,26 @@ archivos.forEach(archivo => {
       else if (/^\d{3}$/.test(talle)) {
         const talleNum = parseInt(talle, 10);
         if (talleNum <= 60) {
-          talle = talle.slice(-2); // Jean
+          talle = talle.slice(-2); // Jean: 028 -> "28", 030 -> "30", etc.
         }
       }
 
-      const lineaFinal = `${cantidad}+${articuloFinal.toLowerCase()}$${talle}`;
+      // Decidir si corresponde SKU "especial" (solo si talle numérico como 40, 42, etc.)
+      let skuElegida = articuloFinalBase;
+      const esJeanNumerico = /^\d{2}$/.test(talle); // "28", "30", "40", etc.
+      if (esJeanNumerico && especiales[codigoBase]) {
+        const reglaEsp = especiales[codigoBase];
+        const desde = Number(reglaEsp.desde) || 40;
+        const sufijo = (reglaEsp.sufijo || 'E').toString();
+        const talleNum = parseInt(talle, 10);
+
+        if (!Number.isNaN(talleNum) && talleNum >= desde) {
+          skuElegida = `${articuloFinalBase}${sufijo}`;
+        }
+      }
+
+      // Generar línea final (NO pack → la cantidad es la original)
+      const lineaFinal = `${cantidad}+${skuElegida.toLowerCase()}$${talle}`;
       salida.push(lineaFinal);
     });
 
